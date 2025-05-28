@@ -7,12 +7,13 @@
 
   <!-- PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes"> <!-- Added based on deprecation warning -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Graulhet Eau">
-  <meta name="theme-color" content="#0284c7"> <!-- sky-700 -->
+  <meta name="theme-color" content="#0284c7"> 
   <link rel="manifest" href="/manifest.json">
   
-  <!-- Icons for PWA (ensure these files exist in /assets/icons/) -->
+  <!-- Icons for PWA (ensure these files exist in /assets/icons/ in your repository) -->
   <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="/assets/icons/icon-512x512.png">
@@ -66,7 +67,7 @@
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+  <script type="module" src="/index.js"></script> <!-- Changed from index.tsx -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

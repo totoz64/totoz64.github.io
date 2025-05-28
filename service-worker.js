@@ -2,17 +2,16 @@ const CACHE_NAME = 'graulhet-eau-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/index.tsx', // Assuming this is the main JS entry point
+  '/index.js', // Changed from index.tsx
   '/manifest.json',
   // Add paths to your actual icon files here if they are different
+  // Ensure these files exist in your repository under /assets/icons/
   '/assets/icons/icon-192x192.png',
   '/assets/icons/icon-512x512.png',
   '/assets/icons/apple-touch-icon.png',
-  // External assets (CDNs) - caching these can be tricky due to opaque responses / CORS
-  // but it's good to list them. The browser might cache them effectively anyway.
+  // External assets (CDNs)
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap',
-  // You might need to add more specific font file URLs if the above CSS loads them
 ];
 
 // Install event: Cache core assets
@@ -24,7 +23,7 @@ self.addEventListener('install', event => {
         // Add all assets to cache. If any fail, the SW installation fails.
         return cache.addAll(ASSETS_TO_CACHE.map(url => new Request(url, { mode: 'cors' })))
           .catch(error => {
-            console.error('Failed to cache one or more assets during install:', error);
+            console.error('Failed to cache one or more assets during install:', error, ASSETS_TO_CACHE);
             // It's important to understand why caching failed.
             // For external resources, ensure CORS is handled.
             // For local resources, ensure paths are correct.
@@ -52,8 +51,7 @@ self.addEventListener('activate', event => {
 
 // Fetch event: Serve from cache if available, otherwise fetch from network
 self.addEventListener('fetch', event => {
-  // For navigation requests, try network first, then cache, then offline page (if any)
-  // For other requests (assets), try cache first.
+  // For navigation requests, try network first, then cache, then fallback (e.g. index.html)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -87,7 +85,7 @@ self.addEventListener('fetch', event => {
           }
           // Not in cache, fetch from network, then cache it
           return fetch(event.request).then(networkResponse => {
-            if (networkResponse && networkResponse.status === 200) {
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type !== 'opaque') {
               const responseToCache = networkResponse.clone();
               caches.open(CACHE_NAME)
                 .then(cache => {
