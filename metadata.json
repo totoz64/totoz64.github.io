@@ -1,7 +1,0 @@
-{
-  "name": "Graulhet Eau - Interventions",
-  "description": "Application mobile pour la création, le suivi et la gestion des interventions techniques sur le terrain avec géolocalisation et horodatage pour la régie des eaux de Graulhet.",
-  "requestFramePermissions": [
-    "geolocation"
-  ]
-}
