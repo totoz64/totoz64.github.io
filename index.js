@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App'; // Assuming App.tsx (now App.js or handled by esm.sh) is in the same directory
+import App from './App'; // Will resolve to App.js
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

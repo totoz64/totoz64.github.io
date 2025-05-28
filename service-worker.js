@@ -1,4 +1,4 @@
-const CACHE_NAME = 'graulhet-eau-cache-v1';
+const CACHE_NAME = 'graulhet-eau-cache-v2'; // Increment cache version
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -11,13 +11,14 @@ const ASSETS_TO_CACHE = [
   '/services/geocodingService.js',
   '/services/interventionService.js',
   '/constants.js',
-  '/types.js', // Even if mostly comments, good to cache if it's part of the structure
+  '/types.js', 
   '/assets/icons/icon-192x192.png',
   '/assets/icons/icon-512x512.png',
   '/assets/icons/apple-touch-icon.png',
   // External assets (CDNs)
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap',
+  // Potentially add specific font files if Google Fonts API resolves to them and they are critical for offline
 ];
 
 // Install event: Cache core assets
@@ -26,23 +27,24 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache:', CACHE_NAME);
-        // Add all assets to cache. If any fail, the SW installation fails.
-        // Using new Request with mode: 'cors' for external resources
-        // For local resources, it might not be strictly necessary but doesn't hurt.
         const cachePromises = ASSETS_TO_CACHE.map(assetUrl => {
-          const request = new Request(assetUrl, {mode: 'cors'});
+          // For external resources, ensure CORS mode. For local, not strictly needed but harmless.
+          const request = new Request(assetUrl, assetUrl.startsWith('http') ? { mode: 'cors' } : {});
           return cache.add(request).catch(err => {
             console.warn(`Failed to cache ${assetUrl} during install:`, err);
+            // Don't let one failed asset (especially external CDN) fail the entire SW install
+            // if it's not critical for core app shell.
           });
         });
+        // Promise.allSettled might be better if some non-critical assets can fail caching
         return Promise.all(cachePromises);
       })
       .then(() => {
         console.log('All specified assets processed for caching during install.');
-        return self.skipWaiting(); // Activate the new service worker immediately
+        return self.skipWaiting(); 
       })
       .catch(error => {
-          console.error('Service Worker installation failed:', error);
+          console.error('Service Worker installation failed significantly:', error);
       })
   );
 });
@@ -59,7 +61,7 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim()) // Take control of uncontrolled clients
+    }).then(() => self.clients.claim()) 
   );
 });
 
@@ -70,7 +72,6 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // If successful, clone and cache the response for future offline use.
           if (response && response.status === 200) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME)
@@ -81,43 +82,46 @@ self.addEventListener('fetch', event => {
           return response;
         })
         .catch(() => {
-          // Network failed, try to serve from cache
           return caches.match(event.request)
             .then(cachedResponse => {
-              // Fallback to /index.html for any navigation request not found in cache
               return cachedResponse || caches.match('/index.html'); 
             });
         })
     );
-  } else {
-    // For static assets (CSS, JS, images, fonts), use a cache-first strategy
+  } else if (ASSETS_TO_CACHE.includes(event.request.url) || ASSETS_TO_CACHE.includes(new URL(event.request.url).pathname)) {
+    // For static assets explicitly listed in ASSETS_TO_CACHE, use cache-first
     event.respondWith(
       caches.match(event.request)
         .then(cachedResponse => {
-          // Return cached response if found
           if (cachedResponse) {
             return cachedResponse;
           }
-          // Not in cache, fetch from network, then cache it
           return fetch(event.request).then(networkResponse => {
-            // Check if we received a valid response
-            if (networkResponse && networkResponse.status === 200 && networkResponse.type !== 'opaque') {
-              const responseToCache = networkResponse.clone();
-              caches.open(CACHE_NAME)
-                .then(cache => {
-                  cache.put(event.request, responseToCache);
-                });
-            } else if (networkResponse.type === 'opaque') {
-              // Opaque responses (e.g. from no-cors requests to third-party CDNs) can't be cloned or inspected,
-              // but they are cached as is. This is fine for CDNs.
+            if (networkResponse && networkResponse.status === 200) {
+               // Check for opaque responses from CDNs if not using mode: 'cors' in cache.add during install
+              if (networkResponse.type === 'opaque' && !event.request.url.startsWith(self.location.origin)) {
+                // Just return opaque response, don't try to cache it again if it's already handled by install
+              } else if (networkResponse.type !== 'opaque'){ // Cache non-opaque responses
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME)
+                  .then(cache => {
+                    cache.put(event.request, responseToCache);
+                  });
+              }
             }
             return networkResponse;
           }).catch(error => {
             console.warn('Fetching asset failed, no cache hit:', event.request.url, error);
-            // Optionally return a placeholder for images or a generic error for other assets
-            // For now, just let the browser handle the fetch error (e.g. show broken image).
+            // For an offline fallback for images, you could return a placeholder here:
+            // if (event.request.destination === 'image') {
+            //   return caches.match('/assets/icons/placeholder.png');
+            // }
           });
         })
     );
+  } else {
+    // For other requests not in ASSETS_TO_CACHE (e.g. API calls not meant to be cached by SW),
+    // just fetch from network. Or apply a network-first strategy if appropriate.
+    event.respondWith(fetch(event.request));
   }
 });

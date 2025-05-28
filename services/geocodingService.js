@@ -1,6 +1,5 @@
-
 // import { Coordinates } from '../types'; // Type information removed for JS
-import { MOCKED_ADDRESS_API_NOTICE } from '../constants';
+import { MOCKED_ADDRESS_API_NOTICE } from '../constants'; // Ensure this points to constants.js
 
 // MOCK IMPLEMENTATION: Replace with a real geocoding API call
 export const fetchAddressFromCoordinates = async (coords) => { // Type annotation for coords removed
