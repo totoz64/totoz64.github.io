@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ado@Work Pro - Gestionnaire de Tâches</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; margin: 0; background-color: #f0f2f5; color: #1c1e21; display: flex; flex-direction: column; align-items: center; min-height: 100vh; font-size: 16px;}
+        .app-container { width: 100%; max-width: 950px; margin: 20px auto; padding: 0; }
+        
+        .header-bar { 
+            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            color: white; 
+            padding: 22px 35px; 
+            border-radius: 20px 20px 0 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 6px 18px rgba(94,114,228,0.2); 
+        }
+        .header-bar h1 { margin: 0; font-size: 2.6em; font-weight: 700; letter-spacing: 0.5px; }
+        .user-info { text-align: right; }
+        .user-info .current-user-name { font-size: 1.3em; font-weight: 500; margin-bottom: 7px; }
+        .user-info .points-display, .user-info .money-display { font-size: 1.15em; margin-bottom: 5px; }
+        .user-info .points-display strong, .user-info .money-display strong { font-size: 1.35em; }
+        .admin-access-btn { padding: 11px 20px; background-color: #ff8f00; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1em; transition: background-color 0.25s, transform 0.1s; }
+        .admin-access-btn:hover { background-color: #e68100; transform: translateY(-1px); }
+        
+        .main-content { background-color: #ffffff; padding: 35px; border-radius: 0 0 20px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.07); }
+        
+        .auth-section { text-align: center; padding: 40px; background-color: #f8f9fc; border-radius: 15px; margin-bottom: 30px; border: 1px solid #e3e6f0; }
+        .auth-section h2 { margin-top: 0; color: #32325d; font-size: 1.8em; }
+        .auth-section input { padding: 14px; margin: 12px 0; border: 1px solid #cad1d7; border-radius: 8px; width: 250px; font-size: 1.05em; }
+        .auth-section button { padding: 14px 28px; background-color: #2dce89; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; transition: background-color 0.2s; }
+        .auth-section button:hover { background-color: #26ab73;}
+        
+        .view-selector { display: flex; justify-content: center; margin-bottom: 35px; gap: 18px; }
+        .view-selector button { padding: 14px 28px; font-size: 1.2em; border: 2px solid #d1d9e6; border-radius: 35px; cursor: pointer; background-color: #f1f3f9; color: #525f7f; transition: all 0.25s ease-in-out; font-weight: 500;}
+        .view-selector button.active { background-color: #5e72e4; color: white; border-color: #5165cb; }
+        .view-selector button:hover:not(.active) { background-color: #e4e8f0; border-color: #aab4c8; }
+
+        .task-form { background-color: #fdfdfe; padding: 30px; border-radius: 15px; margin-bottom: 35px; border: 1px solid #e3e6f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
+        .input-group { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 20px; align-items: center; }
+        .input-group label { font-size: 1.05em; color: #32325d; margin-bottom: 6px; display: block; width: 100%; font-weight: 500;}
+        .input-group input[type="text"], .input-group select { flex-grow: 1; padding: 15px; border: 1px solid #cad1d7; border-radius: 10px; font-size: 1em; min-width: 180px; background-color: white;}
+        .input-group input[type="number"] { width: 100px; padding: 15px 12px; border: 1px solid #cad1d7; border-radius: 10px; font-size: 1em; text-align: center; background-color: white;}
+        .input-group label.inline-label { width: auto; margin-bottom: 0; margin-right: 12px;}
+        .task-form button.add-task-btn { padding: 15px 28px; background-color: #11cdef; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1em; transition: background-color 0.3s ease, transform 0.1s; display: block; margin-left: auto; margin-top: 15px; font-weight: 500;}
+        .task-form button.add-task-btn:hover { background-color: #0fa3c4; transform: translateY(-1px);}
+        
+        .reminder-options, .recurrence-options { margin-top: 18px; padding-top: 18px; border-top: 1px dashed #e0e6ed; }
+        .reminder-options label, .recurrence-options label { margin-right: 12px; font-size: 1.05em; color: #525f7f; }
+        .reminder-options input[type="checkbox"], .recurrence-options input[type="checkbox"] { margin-right: 7px; vertical-align: middle; transform: scale(1.15); }
+        .reminder-inputs, .recurrence-inputs { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+        .reminder-inputs input[type="date"], .reminder-inputs input[type="time"], .recurrence-inputs select { padding: 12px; border: 1px solid #cad1d7; border-radius: 8px; font-size: 1em; background-color: white;}
+        
+        .photo-upload-area { margin-top: 10px; text-align: center; } /* MODIFIÉ */
+        .photo-upload-area label {
+            display: inline-block; /* MODIFIÉ */
+            padding: 10px 15px;
+            background-color: #5e72e4;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background-color 0.2s;
+        }
+        .photo-upload-area label:hover { background-color: #5165cb; }
+        .photo-upload-area input[type="file"] { display: none; } /* Caché car on utilise le label */
+        .photo-upload-area img.proof-preview { 
+            max-width: 100px; 
+            max-height: 100px; 
+            margin-top: 10px; 
+            border-radius: 6px; 
+            border: 1px solid #dee2e6; 
+            display: block; 
+            margin-left: auto; /* Centrer l'image */
+            margin-right: auto;
+        }
+
+
+        ul { list-style-type: none; padding: 0; }
+        li { background-color: #ffffff; padding: 20px 28px; margin-bottom: 18px; border-radius: 15px; display: flex; justify-content: space-between; align-items: flex-start; box-shadow: 0 4px 10px rgba(0,0,0,0.06); border-left: 8px solid #5e72e4; transition: all 0.3s ease; }
+        li.completed { background-color: #e3f9e5; border-left-color: #2dce89; opacity: 0.92; }
+        li.overdue { border-left-color: #f5365c; background-color: #fdecea; }
+        li.available-task { border-left-color: #fb6340; }
+        
+        li .task-content-wrapper { display: flex; flex-direction: column; flex-grow: 1; }
+        li .task-text { font-size: 1.25em; font-weight: 600; margin-bottom: 7px; display: block; color: #172b4d;}
+        li.completed .task-text { text-decoration: line-through; color: #525f7f; }
+        li .task-details { font-size: 1em; color: #525f7f; line-height: 1.6; }
+        li .task-details .task-points { color: #f5365c; font-weight: bold; } 
+        li .task-details .due-date, li .task-details .recurrence-info { margin-left: 14px; font-style: italic; font-size: 0.95em; }
+        li .task-details .due-date.is-due { color: #d73754; font-weight: bold; }
+        li .task-details .assigned-by, li .task-details .completed-at { font-size: 0.9em; color: #8898aa; display: block; margin-top:5px;}
+        li .task-proof-image { max-width: 160px; max-height: 160px; margin-top: 12px; border-radius: 8px; border: 1px solid #e3e6f0; cursor: pointer; object-fit: cover; }
+
+        li .actions { display: flex; flex-direction: column; align-items: center; /* MODIFIÉ pour centrer le contenu des actions */ margin-left: 18px; flex-shrink: 0; }
+        li .actions button { background-color: transparent; border: none; cursor: pointer; font-size: 26px; padding: 7px; color: #8898aa; margin-bottom: 6px; transition: color 0.2s; }
+        li .actions button:hover { color: #525f7f; }
+        li .actions .complete-btn, li .actions .take-task-btn { color: #2dce89; margin-top: 10px; /* AJOUTÉ: Espace au-dessus du bouton compléter */}
+        li .actions .complete-btn:hover, li .actions .take-task-btn:hover { color: #26ab73; }
+        li .actions .delete-btn-admin { color: #f5365c; } 
+        li .actions .delete-btn-admin:hover { color: #d73754; } 
+         
+        .rewards-section { margin-top: 40px; padding: 30px; background-color: #fffadf; border-radius: 15px; border: 1px solid #fff0b3; text-align: center; box-shadow: 0 4px 12px rgba(251,196,45,0.15);}
+        .rewards-section h3 { color: #b38600; margin-top: 0; font-size: 1.6em; font-weight: 600;}
+        .rewards-section button { padding: 15px 30px; background-color: #fbc42d; color: #32325d; border: none; border-radius: 10px; font-size: 1.2em; cursor: pointer; margin-top: 14px; transition: background-color 0.3s ease, transform 0.1s; font-weight: 600;}
+        .rewards-section button:hover { background-color: #f9b700; transform: translateY(-1px);}
+        .rewards-section button:disabled { background-color: #e9ecef; cursor: not-allowed; color: #6c757d;}
+        .rewards-section p { font-size: 1.05em; color: #525f7f; }
+        
+        h2 { color: #172b4d; border-bottom: 3px solid #e3e6f0; padding-bottom: 14px; margin-top: 40px; font-weight: 600; font-size: 1.8em;}
+        
+        .instructions { font-size: 1em; color: #525f7f; margin-top: 40px; padding: 25px; background-color: #e3e6f0; border-left: 6px solid #8898aa; border-radius: 10px; }
+        .instructions button { background-color: #f5365c; color: white; padding: 11px 18px; border:none; border-radius: 8px; margin-top:20px; cursor:pointer; font-size: 1em; transition: background-color 0.2s, transform 0.1s; }
+        .instructions button:hover { background-color: #d73754; transform: translateY(-1px); }
+        .instructions .reset-user-btn { background-color: #fb6340; margin-right: 14px;}
+
+        .congrats-popup, .motivation-popup {
+            position: fixed;
+            top: -150px; /* Start further off-screen for longer animation */
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 18px 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            z-index: 1001;
+            font-size: 1.2em;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out, top 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
+            max-width: 80%;
+        }
+        .congrats-popup { background-color: #2dce89; } 
+        .motivation-popup { background-color: #5e72e4; } 
+
+        .congrats-popup.show, .motivation-popup.show {
+            opacity: 1;
+            top: 30px; 
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="motivationPopup" class="motivation-popup"></div>
+    <div id="congratsPopup" class="congrats-popup"></div>
+
+    <div class="app-container">
+        <div class="header-bar">
+            <h1>Ado@Work Pro</h1>
+            <div class="user-info">
+                <div id="currentUserNameDisplay" class="current-user-name"></div>
+                <div id="pointsMoneyContainer">
+                    <div class="points-display">Points: <strong id="totalPoints">0</strong></div>
+                    <div class="money-display">Argent: <strong id="totalMoney">0</strong> €</div>
+                </div>
+                <button id="adminAccessBtn" class="admin-access-btn" onclick="showAdminLogin()">Accès Adulte</button>
+                <button id="logoutAdminBtn" class="admin-access-btn hidden" onclick="logoutAdmin()">Quitter Adulte</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="adminLoginSection" class="auth-section hidden">
+                <h2>Accès Adulte</h2>
+                <input type="password" id="adminPassword" placeholder="Mot de passe">
+                <button onclick="loginAdmin()">Se connecter</button>
+                <p id="adminLoginError" style="color:red;"></p>
+            </div>
+
+            <div id="appView">
+                <div class="view-selector" id="childUserSelector">
+                    {/* Les boutons enfants seront générés par JS */}
+                </div>
+
+                <div class="task-form" id="taskFormAdmin" class="hidden">
+                    <h3>Créer une nouvelle tâche (Adulte)</h3>
+                    <div class="input-group">
+                        <label for="taskInputAdmin">Description de la tâche :</label>
+                        <input type="text" id="taskInputAdmin" placeholder="Ex: Ranger sa chambre">
+                    </div>
+                     <div class="input-group">
+                        <label for="pointsInputAdmin" class="inline-label">Points :</label>
+                        <input type="number" id="pointsInputAdmin" min="0" value="10">
+                        <label for="assignToSelect" class="inline-label" style="margin-left: 20px;">Assigner à :</label>
+                        <select id="assignToSelect">
+                            <option value="available">Disponible (au choix)</option>
+                            {/* Les options enfants seront générées par JS */}
+                            <option value="all">Tous les Ados (individuellement)</option>
+                        </select>
+                    </div>
+                    <div class="recurrence-options">
+                        <label for="recurrenceTypeSelect" class="inline-label">Récurrence :</label>
+                        <select id="recurrenceTypeSelect" onchange="toggleRecurrenceDay()">
+                            <option value="none">Jamais</option>
+                            <option value="daily">Quotidienne</option>
+                            <option value="weekly">Hebdomadaire</option>
+                        </select>
+                        <select id="recurrenceDaySelect" class="hidden" style="margin-left: 10px;">
+                            <option value="1">Lundi</option>
+                            <option value="2">Mardi</option>
+                            <option value="3">Mercredi</option>
+                            <option value="4">Jeudi</option>
+                            <option value="5">Vendredi</option>
+                            <option value="6">Samedi</option>
+                            <option value="0">Dimanche</option>
+                        </select>
+                    </div>
+                    <div class="reminder-options">
+                        <input type="checkbox" id="reminderCheckboxAdmin" onchange="toggleReminderInputs('Admin')">
+                        <label for="reminderCheckboxAdmin">Définir un rappel ?</label>
+                        <div id="reminderInputsContainerAdmin" class="reminder-inputs hidden">
+                            <input type="date" id="dueDateInputAdmin">
+                            <input type="time" id="dueTimeInputAdmin">
+                        </div>
+                    </div>
+                    <button onclick="addTaskAdmin()" class="add-task-btn">Ajouter Tâche</button>
+                </div>
+
+                <div id="childTaskView">
+                    <h2>Mes Tâches Assignées</h2>
+                    <ul id="pendingTasksList"></ul>
+
+                    <h2>Tâches Disponibles</h2>
+                    <ul id="availableTasksList"></ul>
+
+                    <h2>Mes Tâches Terminées</h2>
+                    <ul id="completedTasksList"></ul>
+
+                    <div class="rewards-section" id="childRewardsSection">
+                        <h3>Zone Récompenses</h3>
+                        <p>Échangez 100 points contre 10 € !</p>
+                        <button id="exchangeButton" onclick="exchangePoints()">Échanger 100 Points</button>
+                    </div>
+                </div>
+                
+                <div id="adminTaskManagementView" class="hidden">
+                    <h2>Gestion des Tâches (Adulte)</h2>
+                    <h3>Toutes les Tâches Actives</h3>
+                    <ul id="allActiveTasksListAdmin"></ul>
+                    <h3>Toutes les Tâches Terminées</h3>
+                    <ul id="allCompletedTasksListAdmin"></ul>
+                </div>
+
+                <div class="instructions">
+                    <p id="reminderNote"><strong>Note :</strong> Les rappels ne fonctionnent que si la page reste ouverte. Les photos sont stockées localement. Les tâches récurrentes se recréent après complétion.</p>
+                    <button onclick="resetCurrentUser()" class="reset-user-btn" id="resetCurrentUserBtn">Réinitialiser l'utilisateur actuel</button>
+                    <button onclick="resetAllData()" id="resetAllBtn">Réinitialiser TOUT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let appData = {
+            currentUser: null, 
+            isAdminView: false,
+            tasks: [], 
+            children: { 
+                elisa: { name: "Elisa", totalPoints: 0, moneyEarned: 0 },
+                maxence: { name: "Maxence", totalPoints: 0, moneyEarned: 0 }
+            }
+        };
+
+        const ADMIN_PASSWORD = "1234"; 
+        const applauseSound = new Audio("data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzU0VFNTRQAAAAgAAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
+        
+        const motivationalQuotes = [
+            "Chaque petit pas te rapproche de tes rêves. Continue !", "Ta détermination est ta plus grande force. Tu es incroyable !",
+            "N'oublie jamais à quel point tu es capable et unique.", "Les défis te rendent plus fort. Tu les surmontes avec brio !",
+            "Crois en toi, car tu as un potentiel illimité.", "Ta persévérance est inspirante. Ne lâche rien !",
+            "Tu es une étoile qui brille de mille feux. Sois fier de toi !", "Chaque effort compte et te construit. Bravo !",
+            "Le succès est la somme de petits efforts, répétés jour après jour. Tu es sur la bonne voie !", "Tu as le pouvoir de réaliser de grandes choses. Fonce !",
+            "L'important n'est pas d'être parfait, mais de toujours essayer de faire de son mieux.", "Ta curiosité est une qualité précieuse. Explore le monde !",
+            "Souris à la vie, et la vie te sourira. Tu es radieux/radieuse !", "Tu apprends et grandis chaque jour. C'est formidable !",
+            "N'aie pas peur d'échouer, c'est une étape vers la réussite.", "Ta gentillesse illumine le monde. Continue de la partager.",
+            "Tu es plus courageux/courageuse que tu ne le penses. Fais-toi confiance.", "Chaque jour est une nouvelle chance de briller. Saisis-la !",
+            "Ton imagination n'a pas de limites. Rêve grand !", "Tu es spécial(e) et important(e). Ne l'oublie jamais."
+        ];
+        const congratulatoryPhrases = [
+            "Exceptionnel ! Quelle efficacité !", "Mission accomplie avec brio ! Bravo !", "Tu es un vrai champion/une vraie championne !", 
+            "Incroyable travail ! Continue comme ça !", "Félicitations ! C'est du grand art !", "Objectif atteint ! Tu peux être fier/fière de toi !",
+            "Super ! Tu as tout déchiré !", "Magnifique ! Quelle performance !", "Excellent ! Tu as géré ça comme un pro !",
+            "Impressionnant ! Tu as un talent fou !", "Quel succès ! C'est mérité !", "Bravo pour ta persévérance et ce résultat !",
+            "Fantastique ! Tu es sur une lancée incroyable !", "Génial ! Tu as encore prouvé ta valeur !", "Époustouflant ! Tu nous inspires tous !"
+        ];
+
+        const motivationPopup = document.getElementById('motivationPopup');
+        const congratsPopup = document.getElementById('congratsPopup');
+        const adminLoginSection = document.getElementById('adminLoginSection');
+        const appView = document.getElementById('appView');
+        const adminAccessBtn = document.getElementById('adminAccessBtn');
+        const logoutAdminBtn = document.getElementById('logoutAdminBtn');
+        const pointsMoneyContainer = document.getElementById('pointsMoneyContainer');
+        const childUserSelector = document.getElementById('childUserSelector');
+        const taskFormAdmin = document.getElementById('taskFormAdmin');
+        const childTaskView = document.getElementById('childTaskView');
+        const adminTaskManagementView = document.getElementById('adminTaskManagementView');
+        const resetCurrentUserBtn = document.getElementById('resetCurrentUserBtn');
+        
+        const assignToSelect = document.getElementById('assignToSelect');
+        const recurrenceTypeSelect = document.getElementById('recurrenceTypeSelect');
+        const recurrenceDaySelect = document.getElementById('recurrenceDaySelect');
+
+        const pendingTasksList = document.getElementById('pendingTasksList');
+        const availableTasksList = document.getElementById('availableTasksList');
+        const completedTasksList = document.getElementById('completedTasksList');
+        const allActiveTasksListAdmin = document.getElementById('allActiveTasksListAdmin');
+        const allCompletedTasksListAdmin = document.getElementById('allCompletedTasksListAdmin');
+        
+        const totalPointsDisplay = document.getElementById('totalPoints');
+        const totalMoneyDisplay = document.getElementById('totalMoney');
+        const currentUserNameDisplay = document.getElementById('currentUserNameDisplay');
+        const exchangeButton = document.getElementById('exchangeButton');
+        
+        // AJOUTÉ: Variable pour suivre si le popup de motivation initial a été montré
+        let initialMotivationShown = false;
+        let motivationTimeoutId = null; // Pour gérer le timeout du popup de motivation
+
+        function showPopup(element, message, duration = 3500) { // MODIFIÉ: Ajout du paramètre duration
+            if (element.classList.contains('show')) { // Si déjà affiché, annuler l'ancien timeout
+                if (element === motivationPopup && motivationTimeoutId) clearTimeout(motivationTimeoutId);
+                // Pour congrats, on peut le laisser se superposer ou le remplacer rapidement
+            }
+            element.textContent = message;
+            element.classList.add('show');
+            
+            if (element === motivationPopup) {
+                if (motivationTimeoutId) clearTimeout(motivationTimeoutId); // Clear previous timeout
+                motivationTimeoutId = setTimeout(() => {
+                    element.classList.remove('show');
+                    motivationTimeoutId = null;
+                }, duration);
+            } else { // Pour congrats popup
+                 setTimeout(() => {
+                    element.classList.remove('show');
+                }, duration);
+            }
+        }
+        
+        function showRandomMotivation(isInitial = false) {
+            const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+            // MODIFIÉ: Durée plus longue pour le popup initial
+            const duration = isInitial ? 20000 : 5000; // 20 secondes si initial, 5 sinon
+            showPopup(motivationPopup, motivationalQuotes[randomIndex], duration);
+            if (isInitial) initialMotivationShown = true;
+        }
+        
+        function toggleRecurrenceDay() {
+            if (recurrenceTypeSelect.value === 'weekly') {
+                recurrenceDaySelect.classList.remove('hidden');
+            } else {
+                recurrenceDaySelect.classList.add('hidden');
+            }
+        }
+
+        function toggleReminderInputs(viewSuffix = '') {
+            const checkboxId = 'reminderCheckbox' + viewSuffix;
+            const containerId = 'reminderInputsContainer' + viewSuffix;
+            const dueDateId = 'dueDateInput' + viewSuffix;
+            const dueTimeId = 'dueTimeInput' + viewSuffix;
+
+            const checkbox = document.getElementById(checkboxId);
+            const container = document.getElementById(containerId);
+            const dueDateElem = document.getElementById(dueDateId);
+            const dueTimeElem = document.getElementById(dueTimeId);
+
+            if (checkbox && container) { 
+                container.classList.toggle('hidden', !checkbox.checked); // Utiliser la classe hidden
+                if (!checkbox.checked) {
+                    if (dueDateElem) dueDateElem.value = '';
+                    if (dueTimeElem) dueTimeElem.value = '';
+                }
+            }
+        }
+        
+        function showAdminLogin() {
+            adminLoginSection.classList.remove('hidden');
+            appView.classList.add('hidden');
+            adminAccessBtn.classList.add('hidden');
+        }
+
+        function loginAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            const errorP = document.getElementById('adminLoginError');
+            if (password === ADMIN_PASSWORD) {
+                appData.currentUser = 'adulte';
+                appData.isAdminView = true;
+                errorP.textContent = '';
+                document.getElementById('adminPassword').value = '';
+                adminLoginSection.classList.add('hidden');
+                appView.classList.remove('hidden');
+                logoutAdminBtn.classList.remove('hidden');
+                updateViewForAdmin();
+            } else {
+                errorP.textContent = "Mot de passe incorrect.";
+            }
+        }
+
+        function logoutAdmin() {
+            appData.currentUser = null; 
+            appData.isAdminView = false;
+            logoutAdminBtn.classList.add('hidden');
+            adminAccessBtn.classList.remove('hidden');
+            updateViewForChild();
+            selectUser(Object.keys(appData.children)[0] || 'elisa'); 
+        }
+
+        function updateViewForAdmin() {
+            currentUserNameDisplay.textContent = "Adulte (Gestion)";
+            pointsMoneyContainer.classList.add('hidden');
+            childUserSelector.classList.add('hidden');
+            taskFormAdmin.classList.remove('hidden');
+            childTaskView.classList.add('hidden');
+            adminTaskManagementView.classList.remove('hidden');
+            resetCurrentUserBtn.classList.add('hidden');
+            renderTasks();
+        }
+
+        function updateViewForChild() {
+            pointsMoneyContainer.classList.remove('hidden');
+            childUserSelector.classList.remove('hidden');
+            taskFormAdmin.classList.add('hidden');
+            childTaskView.classList.remove('hidden');
+            adminTaskManagementView.classList.add('hidden');
+            resetCurrentUserBtn.classList.remove('hidden');
+            if (appData.currentUser && appData.currentUser !== 'adulte' && appData.children[appData.currentUser]) {
+                 currentUserNameDisplay.textContent = appData.children[appData.currentUser].name;
+            } else {
+                currentUserNameDisplay.textContent = "Sélectionner un Ado";
+            }
+             renderTasks();
+        }
+
+        function loadData() {
+            const storedAppData = localStorage.getItem('adoAtWorkDataPro');
+            if (storedAppData) {
+                const parsedData = JSON.parse(storedAppData);
+                const defaultChildren = JSON.parse(JSON.stringify(appData.children)); 
+                appData = {...appData, ...parsedData};
+                for (const childKey in defaultChildren) {
+                    if (!appData.children[childKey]) {
+                        appData.children[childKey] = defaultChildren[childKey];
+                    } else {
+                         appData.children[childKey] = { ...defaultChildren[childKey], ...appData.children[childKey], name: defaultChildren[childKey].name };
+                    }
+                }
+                if (!appData.tasks) appData.tasks = [];
+                appData.tasks.forEach(task => { 
+                    if (task.hasReminder && task.dueDate && task.dueTime && !task.completed) {
+                        setTaskReminder(task);
+                    }
+                });
+            }
+            
+            childUserSelector.innerHTML = ''; 
+            const assignToSelectFragment = document.createDocumentFragment(); // For admin dropdown
+            // Keep "Disponible" and "Tous" options, rebuild others
+            const fixedOptions = Array.from(assignToSelect.options).filter(opt => opt.value === "available" || opt.value === "all");
+            assignToSelect.innerHTML = '';
+            fixedOptions.forEach(opt => assignToSelect.appendChild(opt.cloneNode(true)));
+
+
+            Object.keys(appData.children).forEach(childKey => {
+                const button = document.createElement('button');
+                button.id = `user${childKey.charAt(0).toUpperCase() + childKey.slice(1)}`;
+                button.textContent = appData.children[childKey].name;
+                button.onclick = () => selectUser(childKey);
+                childUserSelector.appendChild(button);
+
+                const option = document.createElement('option');
+                option.value = childKey;
+                option.textContent = appData.children[childKey].name;
+                assignToSelectFragment.appendChild(option);
+            });
+            // Insert new child options before the "Tous les Ados" option
+            const allOptionInSelect = assignToSelect.querySelector('option[value="all"]');
+            if (allOptionInSelect) {
+                assignToSelect.insertBefore(assignToSelectFragment, allOptionInSelect);
+            } else { // Fallback if "all" option somehow isn't there
+                assignToSelect.appendChild(assignToSelectFragment);
+            }
+
+
+            if (appData.isAdminView) {
+                appData.currentUser = 'adulte';
+                updateViewForAdmin();
+            } else {
+                updateViewForChild();
+                const firstChildKey = Object.keys(appData.children)[0];
+                if (!appData.currentUser || appData.currentUser === 'adulte' || !appData.children[appData.currentUser]) {
+                    selectUser(firstChildKey || 'elisa'); 
+                } else {
+                    selectUser(appData.currentUser);
+                }
+            }
+            // MODIFIÉ: Afficher la motivation initiale seulement une fois par session de chargement de page
+            if (!initialMotivationShown) {
+                 showRandomMotivation(true); // true pour indiquer que c'est l'affichage initial
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('adoAtWorkDataPro', JSON.stringify(appData));
+        }
+
+        function selectUser(childKey) {
+            if (appData.isAdminView || !appData.children[childKey]) return; 
+
+            appData.currentUser = childKey;
+            Object.keys(appData.children).forEach(key => {
+                const btn = document.getElementById(`user${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                if (btn) btn.classList.toggle('active', key === childKey);
+            });
+
+            currentUserNameDisplay.textContent = appData.children[childKey].name;
+            renderTasks();
+            updateChildDisplays();
+            saveData();
+        }
+
+        function getCurrentChildData() {
+            if (appData.isAdminView || !appData.currentUser || !appData.children[appData.currentUser]) return null;
+            return appData.children[appData.currentUser];
+        }
+        
+        function createTaskListItem(task, now) {
+            const li = document.createElement('li');
+            li.dataset.id = task.id;
+            li.dataset.originalId = task.originalId || task.id;
+
+            const taskContentWrapper = document.createElement('div');
+            taskContentWrapper.className = 'task-content-wrapper';
+
+            const taskTextSpan = document.createElement('span');
+            taskTextSpan.className = 'task-text';
+            taskTextSpan.textContent = task.text;
+            taskContentWrapper.appendChild(taskTextSpan);
+
+            let detailsHTML = `<span class="task-points">${task.points} pts</span>`;
+            if (task.recurrence && task.recurrence.type !== 'none') {
+                let recurrenceText = `Récurrence: ${task.recurrence.type === 'daily' ? 'Quotidienne' : 'Hebdomadaire'}`;
+                if (task.recurrence.type === 'weekly' && task.recurrence.day !== undefined) {
+                    const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+                    recurrenceText += ` (${days[task.recurrence.day]})`;
+                }
+                detailsHTML += `<span class="recurrence-info">${recurrenceText}</span>`;
+            }
+            if (task.hasReminder && task.dueDate && task.dueTime) {
+                const dueDateTime = new Date(`${task.dueDate}T${task.dueTime}`);
+                detailsHTML += `<span class="due-date ${!task.completed && dueDateTime < now ? 'is-due' : ''}"> — Échéance: ${new Date(dueDateTime).toLocaleString('fr-FR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</span>`;
+                if (!task.completed && dueDateTime < now) li.classList.add('overdue');
+            }
+            if (task.createdBy) detailsHTML += `<span class="assigned-by">Créée par: ${task.createdBy}</span>`;
+            if (appData.isAdminView && task.assignedTo && task.assignedTo !== 'available' && task.assignedTo !== 'adulte' && appData.children[task.assignedTo]) {
+                 detailsHTML += `<span class="assigned-by">Assignée à: ${appData.children[task.assignedTo].name}</span>`;
+            }
+            if (task.completed && task.completedAt) {
+                detailsHTML += `<span class="completed-at">Terminée le: ${new Date(task.completedAt).toLocaleString('fr-FR', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})}</span>`;
+            }
+
+            const taskDetailsSpan = document.createElement('span');
+            taskDetailsSpan.className = 'task-details';
+            taskDetailsSpan.innerHTML = detailsHTML;
+            taskContentWrapper.appendChild(taskDetailsSpan);
+
+            if (task.proofImage) {
+                const img = document.createElement('img');
+                img.src = task.proofImage;
+                img.alt = "Preuve de la tâche";
+                img.className = 'task-proof-image';
+                img.onclick = () => window.open(img.src, '_blank');
+                taskContentWrapper.appendChild(img);
+            }
+            
+            li.appendChild(taskContentWrapper);
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'actions';
+
+            if (appData.isAdminView) {
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'delete-btn-admin';
+                deleteButton.innerHTML = '🗑️';
+                deleteButton.title = "Supprimer la tâche (Adulte)";
+                deleteButton.onclick = () => deleteTask(task.id, true);
+                actionsDiv.appendChild(deleteButton);
+            } else { 
+                if (task.assignedTo === appData.currentUser && !task.completed) {
+                    // MODIFIÉ: Utilisation de la caméra et prévisualisation
+                    const photoArea = document.createElement('div');
+                    photoArea.className = 'photo-upload-area';
+
+                    const photoInputId = `photoProof_${task.id}`;
+                    const photoInput = document.createElement('input');
+                    photoInput.type = 'file';
+                    photoInput.accept = 'image/*';
+                    photoInput.setAttribute('capture', 'environment'); 
+                    photoInput.id = photoInputId;
+                    // L'input est caché, on clique sur le label
+
+                    const photoLabel = document.createElement('label');
+                    photoLabel.htmlFor = photoInputId;
+                    photoLabel.innerHTML = '📸&nbsp;Prendre&nbsp;Preuve';
+                    
+                    const previewImg = document.createElement('img');
+                    previewImg.id = `preview_${photoInputId}`;
+                    previewImg.classList.add('proof-preview'); // AJOUTÉ: classe pour style
+                    previewImg.style.display = 'none'; 
+                    
+                    photoInput.onchange = () => {
+                        if (photoInput.files && photoInput.files[0]) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                previewImg.src = e.target.result;
+                                previewImg.style.display = 'block';
+                            }
+                            reader.readAsDataURL(photoInput.files[0]);
+                        } else {
+                            previewImg.style.display = 'none';
+                            previewImg.src = '#';
+                        }
+                    };
+                    
+                    photoArea.appendChild(photoLabel);
+                    photoArea.appendChild(photoInput); // Doit être dans le DOM pour que le label fonctionne
+                    photoArea.appendChild(previewImg);
+                    actionsDiv.appendChild(photoArea);
+                    
+                    const completeButton = document.createElement('button');
+                    completeButton.className = 'complete-btn';
+                    completeButton.innerHTML = '✅';
+                    completeButton.title = "Marquer comme 'Terminée' (Photo requise)";
+                    completeButton.onclick = () => toggleComplete(task.id, photoInputId);
+                    actionsDiv.appendChild(completeButton);
+
+                } else if ((task.assignedTo === 'available' || !task.assignedTo) && !task.completed) { 
+                     li.classList.add('available-task');
+                    const takeButton = document.createElement('button');
+                    takeButton.className = 'take-task-btn';
+                    takeButton.innerHTML = '🙋'; 
+                    takeButton.title = "Prendre cette tâche";
+                    takeButton.onclick = () => takeTask(task.id);
+                    actionsDiv.appendChild(takeButton);
+                } 
+            }
+            li.appendChild(actionsDiv);
+            return li;
+        }
+
+        function renderTasks() {
+            pendingTasksList.innerHTML = '';
+            availableTasksList.innerHTML = '';
+            completedTasksList.innerHTML = '';
+            allActiveTasksListAdmin.innerHTML = '';
+            allCompletedTasksListAdmin.innerHTML = '';
+
+            const now = new Date();
+
+            appData.tasks.forEach(task => {
+                const li = createTaskListItem(task, now);
+                if (appData.isAdminView) {
+                    if (task.completed) allCompletedTasksListAdmin.appendChild(li);
+                    else allActiveTasksListAdmin.appendChild(li);
+                } else { 
+                    if (task.completed && task.assignedTo === appData.currentUser) {
+                        li.classList.add('completed');
+                        completedTasksList.appendChild(li);
+                    } else if (!task.completed) {
+                        if (task.assignedTo === appData.currentUser) pendingTasksList.appendChild(li);
+                        else if (task.assignedTo === 'available' || !task.assignedTo) availableTasksList.appendChild(li);
+                    }
+                }
+            });
+            if (!appData.isAdminView) updateChildDisplays();
+        }
+        
+        function setTaskReminder(task) {
+            if (task.timeoutId) clearTimeout(task.timeoutId);
+            if (task.hasReminder && task.dueDate && task.dueTime && !task.completed) {
+                const dueDateTime = new Date(`${task.dueDate}T${task.dueTime}`);
+                const now = new Date();
+                const delay = dueDateTime.getTime() - now.getTime();
+                if (delay > 0) {
+                    task.timeoutId = setTimeout(() => {
+                        const currentGlobalTask = appData.tasks.find(t => t.id === task.id);
+                        if (currentGlobalTask && !currentGlobalTask.completed) {
+                            let targetUser = currentGlobalTask.assignedTo === 'available' || !currentGlobalTask.assignedTo ? "Quelqu'un" : (appData.children[currentGlobalTask.assignedTo] ? appData.children[currentGlobalTask.assignedTo].name : "Adulte");
+                            alert(`🔔 RAPPEL pour ${targetUser}: La tâche "${task.text}" est due maintenant !`);
+                            currentGlobalTask.isOverdue = true;
+                            if ((!appData.isAdminView && currentGlobalTask.assignedTo === appData.currentUser) || (currentGlobalTask.assignedTo === 'available' || !currentGlobalTask.assignedTo) || appData.isAdminView) {
+                                renderTasks();
+                            }
+                        }
+                    }, delay);
+                }
+            }
+        }
+        
+        function getNextDueDateForRecurrence(recurrence, originalDueDateStr) {
+            if (!recurrence || recurrence.type === 'none') return null;
+            let nextDueDate = originalDueDateStr ? new Date(originalDueDateStr) : new Date();
+            switch (recurrence.type) {
+                case 'daily': nextDueDate.setDate(nextDueDate.getDate() + 1); break;
+                case 'weekly':
+                    if (!originalDueDateStr) { 
+                        let currentDay = nextDueDate.getDay();
+                        let targetDay = parseInt(recurrence.day, 10);
+                        let diff = targetDay - currentDay;
+                        if (diff <= 0) diff += 7; 
+                        nextDueDate.setDate(nextDueDate.getDate() + diff);
+                    } else { nextDueDate.setDate(nextDueDate.getDate() + 7); }
+                    break;
+                default: return null;
+            }
+            return nextDueDate.toISOString().split('T')[0];
+        }
+
+        function addTaskAdmin() {
+            if (!appData.isAdminView) return;
+            const taskText = document.getElementById('taskInputAdmin').value.trim();
+            const taskPoints = parseInt(document.getElementById('pointsInputAdmin').value, 10) || 0;
+            let assignedTo = assignToSelect.value; 
+            const hasReminder = document.getElementById('reminderCheckboxAdmin').checked;
+            let dueDate = document.getElementById('dueDateInputAdmin').value;
+            let dueTime = document.getElementById('dueTimeInputAdmin').value;
+            const recurrenceType = recurrenceTypeSelect.value;
+            const recurrenceDay = recurrenceType === 'weekly' ? recurrenceDaySelect.value : null;
+
+            if (taskText === '') { alert('Description de la tâche requise.'); return; }
+            if (hasReminder && (!dueDate || !dueTime)) { 
+                if (recurrenceType !== 'none' && !dueDate) {
+                    dueDate = getNextDueDateForRecurrence({ type: recurrenceType, day: recurrenceDay }, null);
+                    if (!dueTime) dueTime = "09:00"; 
+                } else { alert('Date et heure requises pour le rappel spécifique.'); return; }
+            }
+            
+            const tasksToCreate = [];
+            const originalTaskId = Date.now(); 
+
+            if (assignedTo === 'all') {
+                Object.keys(appData.children).forEach((childKey, index) => {
+                    tasksToCreate.push({
+                        id: originalTaskId + index + 1, originalId: originalTaskId, 
+                        text: taskText, points: taskPoints, completed: false,
+                        assignedTo: childKey, createdBy: 'Adulte', 
+                        hasReminder: hasReminder, dueDate: dueDate, dueTime: dueTime,
+                        recurrence: { type: recurrenceType, day: recurrenceDay, lastCompleted: null, originalTaskId: originalTaskId },
+                        timeoutId: null, isOverdue: false, proofImage: null, completedAt: null
+                    });
+                });
+            } else {
+                 tasksToCreate.push({
+                    id: originalTaskId, originalId: originalTaskId,
+                    text: taskText, points: taskPoints, completed: false,
+                    assignedTo: assignedTo, createdBy: 'Adulte',
+                    hasReminder: hasReminder, dueDate: dueDate, dueTime: dueTime,
+                    recurrence: { type: recurrenceType, day: recurrenceDay, lastCompleted: null, originalTaskId: originalTaskId },
+                    timeoutId: null, isOverdue: false, proofImage: null, completedAt: null
+                });
+            }
+            tasksToCreate.forEach(newTask => {
+                appData.tasks.push(newTask);
+                if (newTask.hasReminder && newTask.dueDate && newTask.dueTime) setTaskReminder(newTask);
+            });
+            document.getElementById('taskInputAdmin').value = '';
+            document.getElementById('pointsInputAdmin').value = '10';
+            assignToSelect.value = 'available';
+            recurrenceTypeSelect.value = 'none';
+            recurrenceDaySelect.classList.add('hidden');
+            document.getElementById('reminderCheckboxAdmin').checked = false;
+            toggleReminderInputs('Admin');
+            saveData(); renderTasks();
+        }
+        
+        function takeTask(taskId) {
+            if (appData.isAdminView || !appData.currentUser) return;
+            const task = appData.tasks.find(t => t.id === taskId);
+            if (task && (task.assignedTo === 'available' || !task.assignedTo) && !task.completed) {
+                task.assignedTo = appData.currentUser;
+                alert(`${appData.children[appData.currentUser].name} a pris la tâche : "${task.text}"`);
+                saveData(); renderTasks();
+            }
+        }
+
+        async function toggleComplete(taskId, photoInputId) {
+            if (appData.isAdminView || !appData.currentUser) return; 
+            const taskIndex = appData.tasks.findIndex(t => t.id === taskId && t.assignedTo === appData.currentUser);
+            if (taskIndex === -1) return;
+            const task = appData.tasks[taskIndex];
+            const childData = getCurrentChildData();
+
+            if (task && childData) {
+                if (!task.completed) {
+                    const photoFileElement = document.getElementById(photoInputId);
+                    if (!photoFileElement || !photoFileElement.files || photoFileElement.files.length === 0) {
+                        alert("Veuillez sélectionner une photo comme preuve avant de terminer la tâche."); return;
+                    }
+                    const photoFile = photoFileElement.files[0];
+                    try { task.proofImage = await toBase64(photoFile); } 
+                    catch (error) { console.error("Erreur de conversion:", error); alert("Erreur traitement image."); return; }
+                    
+                    childData.totalPoints += task.points;
+                    task.completedAt = new Date().toISOString();
+                    applauseSound.currentTime = 0;
+                    applauseSound.play().catch(e => console.error("Erreur son:", e));
+                    const randomCongrats = congratulatoryPhrases[Math.floor(Math.random() * congratulatoryPhrases.length)];
+                    showPopup(congratsPopup, randomCongrats);
+                    if (task.timeoutId) { clearTimeout(task.timeoutId); task.timeoutId = null; }
+                    task.completed = true; task.isOverdue = false;
+
+                    if (task.recurrence && task.recurrence.type !== 'none') {
+                        task.recurrence.lastCompleted = task.completedAt;
+                        const nextDueDate = getNextDueDateForRecurrence(task.recurrence, task.dueDate || new Date().toISOString().split('T')[0]);
+                        const nextDueTime = task.dueTime || "09:00";
+                        const newTaskInstance = {
+                            ...task, id: Date.now() + Math.random(), originalId: task.originalId, 
+                            completed: false, completedAt: null, proofImage: null,
+                            dueDate: nextDueDate, dueTime: nextDueTime, isRecurringInstance: true, 
+                            timeoutId: null, recurrence: { ...task.recurrence, lastCompleted: null } 
+                        };
+                        appData.tasks.push(newTaskInstance);
+                        if (newTaskInstance.hasReminder && newTaskInstance.dueDate && newTaskInstance.dueTime) setTaskReminder(newTaskInstance);
+                    }
+                } else { alert("Tâches terminées non annulables par les ados."); return; }
+                saveData(); renderTasks(); updateChildDisplays();
+            }
+        }
+        
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result); reader.onerror = error => reject(error);
+        });
+
+        function deleteTask(taskId, isAdminDelete = false) {
+            const taskIndex = appData.tasks.findIndex(t => t.id === taskId);
+            if (taskIndex > -1) {
+                const task = appData.tasks[taskIndex];
+                if (!isAdminDelete) { alert("Seul un adulte peut supprimer des tâches."); return; }
+                if (task.completed && task.assignedTo && task.assignedTo !== 'available' && task.assignedTo !== 'adulte' && appData.children[task.assignedTo]) {
+                    appData.children[task.assignedTo].totalPoints -= task.points;
+                }
+                if (task.timeoutId) clearTimeout(task.timeoutId);
+                if (task.recurrence && task.recurrence.type !== 'none' && task.id === task.originalId) {
+                    appData.tasks = appData.tasks.filter(t => t.originalId !== task.originalId || t.id === task.id || t.completed);
+                }
+                appData.tasks.splice(appData.tasks.findIndex(t => t.id === taskId), 1);
+                saveData(); renderTasks();
+                if (!appData.isAdminView) updateChildDisplays();
+            }
+        }
+        
+        function updateChildDisplays() {
+            const childData = getCurrentChildData();
+            if (!childData) {
+                totalPointsDisplay.textContent = '0'; totalMoneyDisplay.textContent = '0';
+                if(exchangeButton) exchangeButton.disabled = true; return;
+            }
+            totalPointsDisplay.textContent = childData.totalPoints;
+            totalMoneyDisplay.textContent = childData.moneyEarned;
+            if(exchangeButton) exchangeButton.disabled = childData.totalPoints < 100;
+        }
+
+        function exchangePoints() {
+            if (appData.isAdminView) return;
+            const childData = getCurrentChildData();
+            if (!childData) { alert("Veuillez sélectionner un ado."); return; }
+            if (childData.totalPoints >= 100) {
+                childData.totalPoints -= 100; childData.moneyEarned += 10;
+                alert(`${appData.children[appData.currentUser].name} a échangé 100 points contre 10 € ! 🎉`);
+                saveData(); updateChildDisplays();
+            } else { alert("Pas assez de points."); }
+        }
+        
+        function resetCurrentUser() { 
+            if (appData.isAdminView || !appData.currentUser || appData.currentUser === 'adulte') {
+                alert("Fonction pour réinitialiser un ado."); return;
+            }
+            const childData = getCurrentChildData();
+            if (!childData) { alert("Sélectionner un ado à réinitialiser."); return;}
+            if (confirm(`Réinitialiser points et argent pour ${appData.children[appData.currentUser].name} ?`)) {
+                childData.totalPoints = 0; childData.moneyEarned = 0;
+                saveData(); renderTasks(); updateChildDisplays();
+            }
+        }
+
+        function resetAllData() { 
+            if (confirm("ACTION IRRÉVERSIBLE: Supprimer TOUTES les données ?")) {
+                appData.tasks.forEach(task => { if (task.timeoutId) clearTimeout(task.timeoutId); });
+                appData.tasks = [];
+                Object.keys(appData.children).forEach(childKey => {
+                    appData.children[childKey].totalPoints = 0;
+                    appData.children[childKey].moneyEarned = 0;
+                });
+                localStorage.removeItem('adoAtWorkDataPro');
+                appData.isAdminView = false; appData.currentUser = null;
+                if(logoutAdminBtn) logoutAdminBtn.classList.add('hidden');
+                if(adminAccessBtn) adminAccessBtn.classList.remove('hidden');
+                updateViewForChild();
+                selectUser(Object.keys(appData.children)[0] || 'elisa'); 
+                showRandomMotivation(true); // MODIFIÉ: Afficher la motivation longue après un reset total
+            }
+        }
+        window.onload = loadData;
+    </script>
+</body>
+</html>
